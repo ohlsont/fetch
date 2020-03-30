@@ -1,13 +1,13 @@
 package main
 
 import (
-	"io/ioutil"
-	"os"
-	"fmt"
-	"net/http"
-	"path/filepath"
-	"bytes"
 	"archive/zip"
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -15,7 +15,6 @@ import (
 // Returns the absolute path to the downloaded zip file.
 // IMPORTANT: You must call "defer os.RemoveAll(dir)" in the calling function when done with the downloaded zip file!
 func downloadGithubZipFile(gitHubCommit GitHubCommit, gitHubToken string, instance GitHubInstance) (string, *FetchError) {
-
 	var zipFilePath string
 
 	// Create a temp directory
@@ -23,16 +22,15 @@ func downloadGithubZipFile(gitHubCommit GitHubCommit, gitHubToken string, instan
 	// goal of getting a temporary directory.
 	tempDir, err := ioutil.TempDir("", "")
 	if err != nil {
-		return zipFilePath, wrapError(err)
+		return "", wrapError(err)
 	}
 
 	// Download the zip file, possibly using the GitHub oAuth Token
 	httpClient := &http.Client{}
 	req, err := MakeGitHubZipFileRequest(gitHubCommit, gitHubToken, instance)
 	if err != nil {
-		return zipFilePath, wrapError(err)
+		return "", wrapError(err)
 	}
-
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return zipFilePath, wrapError(err)
@@ -51,8 +49,7 @@ func downloadGithubZipFile(gitHubCommit GitHubCommit, gitHubToken string, instan
 		return zipFilePath, wrapError(err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(tempDir, "repo.zip"), respBodyBuffer.Bytes(), 0644)
-	if err != nil {
+	if err = ioutil.WriteFile(zipFilePath, respBodyBuffer.Bytes(), 0644); err != nil {
 		return zipFilePath, wrapError(err)
 	}
 
@@ -78,12 +75,11 @@ func shouldExtractPathInZip(pathPrefix string, zipPath *zip.File) bool {
 	//		   Check if (pathPrefix + "/") is a prefix in f.Name, if yes, we extract this file.
 
 	zipPathIsFile := !zipPath.FileInfo().IsDir()
-	return (zipPathIsFile && zipPath.Name == pathPrefix) || strings.Index(zipPath.Name, pathPrefix + "/") == 0
+	return (zipPathIsFile && zipPath.Name == pathPrefix) || strings.Index(zipPath.Name, pathPrefix+"/") == 0
 }
 
 // Decompress the file at zipFileAbsPath and move only those files under filesToExtractFromZipPath to localPath
 func extractFiles(zipFilePath, filesToExtractFromZipPath, localPath string) error {
-
 	// Open the zip file for reading.
 	r, err := zip.OpenReader(zipFilePath)
 	if err != nil {
@@ -105,10 +101,8 @@ func extractFiles(zipFilePath, filesToExtractFromZipPath, localPath string) erro
 	// Iterate through the files in the archive,
 	// printing some of their contents.
 	for _, f := range r.File {
-
 		// check if current archive file needs to be extracted
 		if shouldExtractPathInZip(pathPrefix, f) {
-
 			if f.FileInfo().IsDir() {
 				// Create a directory
 				path := filepath.Join(localPath, strings.TrimPrefix(f.Name, pathPrefix))

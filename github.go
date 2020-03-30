@@ -9,6 +9,9 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
+
+	"github.com/dustin/go-humanize"
 )
 
 type GitHubRepo struct {
@@ -214,7 +217,6 @@ func callGitHubApi(repo GitHubRepo, path string, customHeaders map[string]string
 	}
 
 	resp, err := httpClient.Do(request)
-
 	if err != nil {
 		return nil, wrapError(err)
 	}
@@ -235,6 +237,27 @@ func callGitHubApi(repo GitHubRepo, path string, customHeaders map[string]string
 	return resp, nil
 }
 
+type WriteCounter struct {
+	total uint64
+}
+
+func (wc *WriteCounter) Write(p []byte) (int, error) {
+	n := len(p)
+	wc.total += uint64(n)
+	wc.PrintProgress()
+	return n, nil
+}
+
+func (wc WriteCounter) PrintProgress() {
+	// Clear the line by using a character return to go back to the start and remove
+	// the remaining characters by filling it with spaces
+	fmt.Printf("\r%s", strings.Repeat(" ", 35))
+
+	// Return again and print current status of download
+	// We use the humanize package to print the bytes in a meaningful way (e.g. 10 MB)
+	fmt.Printf("\rDownloading... %s complete", humanize.Bytes(wc.total))
+}
+
 // Write the body of the given HTTP response to disk at the given path
 func writeResonseToDisk(resp *http.Response, destPath string) *FetchError {
 	out, err := os.Create(destPath)
@@ -245,6 +268,7 @@ func writeResonseToDisk(resp *http.Response, destPath string) *FetchError {
 	defer out.Close()
 	defer resp.Body.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	counter := &WriteCounter{}
+	_, err = io.Copy(out, io.TeeReader(resp.Body, counter))
 	return wrapError(err)
 }

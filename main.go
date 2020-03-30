@@ -35,16 +35,18 @@ type AssetDownloadResult struct {
 	err       error
 }
 
-const OPTION_REPO = "repo"
-const OPTION_COMMIT = "commit"
-const OPTION_BRANCH = "branch"
-const OPTION_TAG = "tag"
-const OPTION_GITHUB_TOKEN = "github-oauth-token"
-const OPTION_SOURCE_PATH = "source-path"
-const OPTION_RELEASE_ASSET = "release-asset"
-const OPTION_RELEASE_ASSET_CHECKSUM = "release-asset-checksum"
-const OPTION_RELEASE_ASSET_CHECKSUM_ALGO = "release-asset-checksum-algo"
-const OPTION_GITHUB_API_VERSION = "github-api-version"
+const (
+	OPTION_REPO                        = "repo"
+	OPTION_COMMIT                      = "commit"
+	OPTION_BRANCH                      = "branch"
+	OPTION_TAG                         = "tag"
+	OPTION_GITHUB_TOKEN                = "github-oauth-token"
+	OPTION_SOURCE_PATH                 = "source-path"
+	OPTION_RELEASE_ASSET               = "release-asset"
+	OPTION_RELEASE_ASSET_CHECKSUM      = "release-asset-checksum"
+	OPTION_RELEASE_ASSET_CHECKSUM_ALGO = "release-asset-checksum-algo"
+	OPTION_GITHUB_API_VERSION          = "github-api-version"
+)
 
 const ENV_VAR_GITHUB_TOKEN = "GITHUB_OAUTH_TOKEN"
 
@@ -119,8 +121,8 @@ func runFetchWrapper(c *cli.Context) {
 func runFetch(c *cli.Context) error {
 	options, err := parseOptions(c)
 	if err != nil {
-        return err
-    }
+		return err
+	}
 
 	if err := validateOptions(options); err != nil {
 		return err
@@ -206,35 +208,35 @@ func parseOptions(c *cli.Context) (FetchOptions, error) {
 		localDownloadPath = c.Args().Get(1)
 	}
 
-    optionsList := []string{
-        OPTION_REPO,
-        OPTION_TAG,
-        OPTION_COMMIT,
-        OPTION_BRANCH,
-        OPTION_GITHUB_TOKEN,
-        OPTION_SOURCE_PATH,
-        OPTION_RELEASE_ASSET,
-        OPTION_RELEASE_ASSET_CHECKSUM,
-        OPTION_RELEASE_ASSET_CHECKSUM_ALGO,
-        OPTION_GITHUB_API_VERSION,
-    }
+	optionsList := []string{
+		OPTION_REPO,
+		OPTION_TAG,
+		OPTION_COMMIT,
+		OPTION_BRANCH,
+		OPTION_GITHUB_TOKEN,
+		OPTION_SOURCE_PATH,
+		OPTION_RELEASE_ASSET,
+		OPTION_RELEASE_ASSET_CHECKSUM,
+		OPTION_RELEASE_ASSET_CHECKSUM_ALGO,
+		OPTION_GITHUB_API_VERSION,
+	}
 
-    for _, option := range optionsList {
-        switch option {
-        case OPTION_SOURCE_PATH, OPTION_RELEASE_ASSET_CHECKSUM:
-            if c.IsSet(option) {
-                for _, slice := range c.StringSlice(option) {
-                    if slice == "" {
-                        return FetchOptions{}, fmt.Errorf("You specified the --%s flag but did not provide any value.", option)
-                    }
-                }
-            }
-        default:
-            if c.IsSet(option) && c.String(option) == "" {
-                return FetchOptions{}, fmt.Errorf("You specified the --%s flag but did not provide any value.", option)
-            }
-        }
-    }
+	for _, option := range optionsList {
+		switch option {
+		case OPTION_SOURCE_PATH, OPTION_RELEASE_ASSET_CHECKSUM:
+			if c.IsSet(option) {
+				for _, slice := range c.StringSlice(option) {
+					if slice == "" {
+						return FetchOptions{}, fmt.Errorf("You specified the --%s flag but did not provide any value.", option)
+					}
+				}
+			}
+		default:
+			if c.IsSet(option) && c.String(option) == "" {
+				return FetchOptions{}, fmt.Errorf("You specified the --%s flag but did not provide any value.", option)
+			}
+		}
+	}
 
 	for _, assetChecksum := range assetChecksums {
 		assetChecksumMap[assetChecksum] = true
